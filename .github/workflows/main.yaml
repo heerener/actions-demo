@@ -1,0 +1,80 @@
+---
+
+# Variables to define per environment:
+# * SUM_LEFT: an integer
+# * SUM_RIGHT: an integer
+# * SUM_TOTAL: an integer, sum of SUM_LEFT and SUM_RIGHT
+# * TEST_FILE: which test_file to run (unit.py or integration.py)
+# * REQUIREMENTS_FILE: which requirements file to install for this environment (requirements-dev.txt or requirements-test.txt)
+# * PYTEST_ARGS: requirements-test installs pytest-cov, so you can add "--cov-report xml:coverage.xml --cov-report term" there
+#   also recommended for both environments: "--junitxml unittests.xml" or "--junitxml integrationtests.xml" or "--junitxml all_tests.xml"
+name: Test All The Things
+on:
+  push:
+    branches: [test-*]
+  pull_request:
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, test]
+    steps:
+      - name: setup
+        uses: ./.github/actions/test-setup
+        with:
+          ENV: ${{ matrix.environment }}
+      - name: test
+        environment: ${{ matrix.environment }}
+        run: |-
+          echo "Testing against environment ${{ matrix.environment }}"
+          pytest -sv ${{ env.PYTEST_ARGS }} ${{ env.TEST_FILE }}
+      - name: publish test report
+        uses: ctrf-io/github-test-reporter@v1
+        permissions:
+          pull-requests: write  # to allow the pull request reports
+        with:
+          report-path: ./ctrf/*json
+          summary-report: true
+          test-report: true
+          test-list-report: true
+          failed-report: true
+          fail-rate-report: true
+          previous-results-report: true
+          pull-request-report: true
+          pull-request: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if: github.event_name == 'pull_request'
+  run-extra-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, test]
+    steps:
+      - name: setup
+        uses: ./.github/actions/test-setup
+        with:
+          ENV: ${{ matrix.environment }}
+      - name: test
+        environment: ${{ matrix.environment }}
+        run: |-
+          echo "Running extra tests against environment ${{ matrix.environment }}"
+          pytest -sv ${{ env.PYTEST_ARGS }} tests/extra.py
+      - name: publish test report
+        uses: ctrf-io/github-test-reporter@v1
+        permissions:
+          pull-requests: write  # to allow the pull request reports
+        with:
+          report-path: ./ctrf/*json
+          summary-report: true
+          test-report: true
+          test-list-report: true
+          failed-report: true
+          fail-rate-report: true
+          previous-results-report: true
+          pull-request-report: true
+          pull-request: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if: github.event_name == 'pull_request'

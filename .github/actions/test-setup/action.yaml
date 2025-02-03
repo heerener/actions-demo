@@ -1,0 +1,26 @@
+---
+name: Setup Test Environment
+description: Install prerequisites for testing
+inputs:
+  ENV:
+    description: Environment to test against
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Clone repo
+      uses: actions/checkout@v4
+    - name: Install system-level dependencies
+      shell: bash
+      environment: ${{ env.ENV }}
+      run: |-
+        echo "Installing system-level dependencies for ${{ env.ENV }}"
+        apt-get install -q -y firefox
+        echo "Environment ${{ env.ENV }} ready to test"
+    - name: Install virtualenv
+      uses: getsentry/action-setup-venv@2.1.0
+      with:
+        python-version: 3.12
+        cache-dependency-path: |
+          ${{ env.REQUIREMENTS_FILE }}
+        install-cmd: pip install -r ${{ env.REQUIREMENTS_FILE }}
