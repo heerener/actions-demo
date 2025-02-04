@@ -31,6 +31,7 @@ jobs:
       - name: test
         run: |-
           echo "Testing against environment ${{ matrix.environment }}"
+          echo "Blagh is $BLAGH"
           pytest -sv --ctrf ctrf/${{ matrix.environment }}.base.json ${PYTEST_ARGS} ${TEST_FILE}
         env:
           SUM_LEFT: ${{ vars.SUM_LEFT }}
@@ -38,6 +39,7 @@ jobs:
           SUM_TOTAL: ${{ vars.SUM_TOTAL }}
           PYTEST_ARGS: ${{ vars.PYTEST_ARGS }}
           TEST_FILE: ${{ vars.TEST_FILE }}
+          BLAGH: ${{ secrets.BLAGH }}
       - name: publish test report
         uses: ctrf-io/github-test-reporter@v1
         with:
