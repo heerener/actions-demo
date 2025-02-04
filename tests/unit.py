@@ -7,6 +7,7 @@ SUM_TOTAL = int(os.environ["SUM_TOTAL"])
 
 
 def test_sum():
+    print(f"{SUM_LEFT} + {SUM_RIGHT} == {SUM_TOTAL}")
     assert SUM_LEFT + SUM_RIGHT == SUM_TOTAL
 
 

@@ -5,22 +5,22 @@ inputs:
   ENV:
     description: Environment to test against
     required: true
+  REQUIREMENTS_FILE:
+    description: Requirements file to use
+    required: true
 runs:
   using: composite
   steps:
-    - name: Clone repo
-      uses: actions/checkout@v4
     - name: Install system-level dependencies
       shell: bash
-      environment: ${{ env.ENV }}
       run: |-
-        echo "Installing system-level dependencies for ${{ env.ENV }}"
-        apt-get install -q -y firefox
-        echo "Environment ${{ env.ENV }} ready to test"
+        echo "Installing system-level dependencies for ${{ inputs.ENV }}"
+        sudo apt-get install -q -y firefox
+        echo "Environment ${{ inputs.ENV }} ready to test"
     - name: Install virtualenv
-      uses: getsentry/action-setup-venv@2.1.0
+      uses: getsentry/action-setup-venv@v2.0.0
       with:
         python-version: 3.12
         cache-dependency-path: |
-          ${{ env.REQUIREMENTS_FILE }}
-        install-cmd: pip install -r ${{ env.REQUIREMENTS_FILE }}
+          ${{ inputs.REQUIREMENTS_FILE }}
+        install-cmd: pip install -r ${{ inputs.REQUIREMENTS_FILE }}

@@ -10,8 +10,6 @@
 #   also recommended for both environments: "--junitxml unittests.xml" or "--junitxml integrationtests.xml" or "--junitxml all_tests.xml"
 name: Test All The Things
 on:
-  push:
-    branches: [test-*]
   pull_request:
 jobs:
   run-tests:
@@ -19,20 +17,31 @@ jobs:
     strategy:
       matrix:
         environment: [dev, test]
+    environment: ${{ matrix.environment }}
+    permissions:
+      pull-requests: write  # to allow the pull request reports
     steps:
+      - name: Clone repo  # Clone must happen at this level, or we don't have the action available
+        uses: actions/checkout@v4
       - name: setup
         uses: ./.github/actions/test-setup
         with:
           ENV: ${{ matrix.environment }}
+          REQUIREMENTS_FILE: ${{ vars.REQUIREMENTS_FILE }}
       - name: test
-        environment: ${{ matrix.environment }}
         run: |-
           echo "Testing against environment ${{ matrix.environment }}"
-          pytest -sv ${{ env.PYTEST_ARGS }} ${{ env.TEST_FILE }}
+          echo "Blagh is $BLAGH"
+          pytest -sv --ctrf ctrf/${{ matrix.environment }}.base.json ${PYTEST_ARGS} ${TEST_FILE}
+        env:
+          SUM_LEFT: ${{ vars.SUM_LEFT }}
+          SUM_RIGHT: ${{ vars.SUM_RIGHT }}
+          SUM_TOTAL: ${{ vars.SUM_TOTAL }}
+          PYTEST_ARGS: ${{ vars.PYTEST_ARGS }}
+          TEST_FILE: ${{ vars.TEST_FILE }}
+          BLAGH: ${{ secrets.BLAGH }}
       - name: publish test report
         uses: ctrf-io/github-test-reporter@v1
-        permissions:
-          pull-requests: write  # to allow the pull request reports
         with:
           report-path: ./ctrf/*json
           summary-report: true
@@ -45,26 +54,33 @@ jobs:
           pull-request: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        if: github.event_name == 'pull_request'
   run-extra-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         environment: [dev, test]
+    environment: ${{ matrix.environment }}
+    permissions:
+      pull-requests: write  # to allow the pull request reports
     steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
       - name: setup
         uses: ./.github/actions/test-setup
         with:
           ENV: ${{ matrix.environment }}
+          REQUIREMENTS_FILE: ${{ vars.REQUIREMENTS_FILE }}
       - name: test
-        environment: ${{ matrix.environment }}
         run: |-
           echo "Running extra tests against environment ${{ matrix.environment }}"
-          pytest -sv ${{ env.PYTEST_ARGS }} tests/extra.py
+          pytest -sv --ctrf ctrf/${{ matrix.environment }}.extra.json ${PYTEST_ARGS} tests/extra.py
+        env:
+          SUM_LEFT: ${{ vars.SUM_LEFT }}
+          SUM_RIGHT: ${{ vars.SUM_RIGHT }}
+          SUM_TOTAL: ${{ vars.SUM_TOTAL }}
+          PYTEST_ARGS: ${{ vars.PYTEST_ARGS }}
       - name: publish test report
         uses: ctrf-io/github-test-reporter@v1
-        permissions:
-          pull-requests: write  # to allow the pull request reports
         with:
           report-path: ./ctrf/*json
           summary-report: true
@@ -77,4 +93,3 @@ jobs:
           pull-request: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        if: github.event_name == 'pull_request'
