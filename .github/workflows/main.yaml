@@ -31,7 +31,7 @@ jobs:
       - name: test
         run: |-
           echo "Testing against environment ${{ matrix.environment }}"
-          pytest -sv ${PYTEST_ARGS} ${TEST_FILE}
+          pytest -sv --ctrf ctrf/${{ matrix.environment }}.base.json ${PYTEST_ARGS} ${TEST_FILE}
         env:
           SUM_LEFT: ${{ vars.SUM_LEFT }}
           SUM_RIGHT: ${{ vars.SUM_RIGHT }}
@@ -71,7 +71,7 @@ jobs:
       - name: test
         run: |-
           echo "Running extra tests against environment ${{ matrix.environment }}"
-          pytest -sv ${PYTEST_ARGS} tests/extra.py
+          pytest -sv --ctrf ctrf/${{ matrix.environment }}.extra.json ${PYTEST_ARGS} tests/extra.py
         env:
           SUM_LEFT: ${{ vars.SUM_LEFT }}
           SUM_RIGHT: ${{ vars.SUM_RIGHT }}
